@@ -1,17 +1,28 @@
-// K5 - main.js (değişmedi)
-import './tw.css';
-import { initRouter } from './router.js';
-import Header from './components/Header.js';
-import Footer from './components/Footer.js';
+// /src/main.js
+import './tw.css';                  // Tailwind çıkışı (adı farklıysa düzelt)
+import { initRouter } from '@/router.js';
+import Header from '@/components/Header.js';
+import Footer from '@/components/Footer.js';
 
-function boot() {
-  const headerHost = document.getElementById('header');
-  const footerHost = document.getElementById('footer');
-
-  if (headerHost) Header();
-  if (footerHost) footerHost.innerHTML = Footer?.() || '';
-
-  initRouter();
+function safeRenderFooter() {
+  try {
+    const host = document.getElementById('footer');
+    if (!host) return;
+    const html = (typeof Footer === 'function') ? Footer() : '';
+    if (typeof html === 'string') host.innerHTML = html;
+  } catch (e) {
+    console.warn('[main] footer render failed:', e);
+  }
 }
 
-document.addEventListener('DOMContentLoaded', boot);
+function boot() {
+  try { Header(); } catch (e) { console.warn('[main] header render failed:', e); }
+  safeRenderFooter();
+  try { initRouter(); } catch (e) { console.error('[main] router init failed:', e); }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}

@@ -1,14 +1,13 @@
-// K5 - ListingDetail.js (değişmedi – senin paylaştığın stabil sürüm)
-import { getListingById } from '../api/data.js';
+// /src/components/ListingDetail.js
+import { getListingById } from '@/api/data.js';
 
 const esc = (s='') => String(s).replace(/[&<>"']/g, m =>
-  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
 function buildShareLinks(listing) {
   const url  = location.href;
   const text = `${listing.title || 'Emlak ilanı'} - ${listing?.location?.province || ''} ${listing?.location?.district || ''}`;
   const enc = (v) => encodeURIComponent(v || '');
-
   return [
     { name:'WhatsApp', href:`https://wa.me/?text=${enc(text + ' ' + url)}` },
     { name:'Facebook', href:`https://www.facebook.com/sharer/sharer.php?u=${enc(url)}` },
@@ -21,9 +20,7 @@ function buildShareLinks(listing) {
 function injectMeta(listing) {
   try {
     const head = document.head;
-    const removeOld = (sel) => head.querySelectorAll(sel).forEach(n=>n.remove());
-    removeOld('meta[property^="og:"], meta[name^="twitter:"]');
-
+    head.querySelectorAll('meta[property^="og:"], meta[name^="twitter:"]').forEach(n=>n.remove());
     const cover = (listing.photos && listing.photos[listing.coverIndex || 0]) || '';
     const title = listing.title || 'EmlakTürk – İlan Detayı';
     const desc  = listing.description || `${listing?.location?.province || ''} ${listing?.location?.district || ''}`.trim();
@@ -38,7 +35,6 @@ function injectMeta(listing) {
       ['name','twitter:description', desc],
       ['name','twitter:image', cover],
     ];
-
     metas.forEach(([attr, name, content])=>{
       const m=document.createElement('meta');
       m.setAttribute(attr, name);
@@ -58,7 +54,6 @@ function Gallery(listing) {
   if (!photos.length) return `<div class="aspect-[16/9] bg-slate-100 grid place-items-center text-slate-400">Görsel yok</div>`;
   const coverIdx = Math.max(0, Math.min(Number(listing.coverIndex)||0, photos.length-1));
   const cover = photos[coverIdx];
-
   return `
     <div class="space-y-2" data-gallery>
       <div class="aspect-[16/9] bg-slate-100 overflow-hidden rounded-lg">
@@ -76,7 +71,7 @@ function Gallery(listing) {
 }
 
 export default function ListingDetail(id) {
-  queueMicrotask(()=>mountListingDetail(id));
+  queueMicrotask(()=>mountListingDetail(id)); // güvence
   return `
     <section class="container-narrow mx-auto py-6" data-detail-root>
       <div id="detailBody" class="grid md:grid-cols-3 gap-6">
@@ -129,11 +124,7 @@ export async function mountListingDetail(id, root) {
           <div class="text-slate-600">${esc(loc)}</div>
           ${rec.price ? `<div class="mt-2 text-xl font-bold">${fmtPrice(rec.price)}</div>` : ''}
           <div class="mt-3 text-slate-700 whitespace-pre-wrap">${esc(rec.description || '')}</div>
-          ${rec.videoUrl ? `
-            <div class="mt-4">
-              <a class="inline-flex items-center px-3 py-1.5 rounded border" href="${esc(rec.videoUrl)}" target="_blank" rel="noopener">Videoyu Aç</a>
-            </div>` : ''
-          }
+          ${rec.videoUrl ? `<div class="mt-4"><a class="inline-flex items-center px-3 py-1.5 rounded border" href="${esc(rec.videoUrl)}" target="_blank" rel="noopener">Videoyu Aç</a></div>` : ''}
         </div>
       </div>
 

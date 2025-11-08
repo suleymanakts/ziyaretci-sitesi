@@ -1,8 +1,8 @@
-// K5 - Admin.js (ID üretimi eklendi + string sentez hatası düzeltildi)
+// /src/components/Admin.js
 import {
   getListings, upsertListing, publishListing,
-  getUsers, saveUsers, publishUser, newId,
-} from '../api/data.js';
+  getUsers, saveUsers, publishUser,
+} from '@/api/data.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 
@@ -30,18 +30,14 @@ function toArray(any){
   if (Array.isArray(any)) return any;
   if (any && typeof any === 'object') {
     if (Array.isArray(any.items)) return any.items;
-    try { return Object.values(any); } catch { /* no-op */ }
+    try { return Object.values(any); } catch {}
   }
   return [];
 }
 
-/* -------------------- medya state -------------------- */
 let photoBuffer=[]; let coverIndex=-1; let videoUrlTmp='';
 function resetMediaState(){ photoBuffer=[]; coverIndex=-1; videoUrlTmp=''; }
 
-/* =========================================================
-   RENDER
-   ========================================================= */
 export default function Admin(){
   const html =
 `<section id="admin-wrap" class="max-w-7xl mx-auto p-4">
@@ -185,9 +181,6 @@ export default function Admin(){
   return html;
 }
 
-/* =========================================================
-   BIND
-   ========================================================= */
 function bindAdmin(wrap){
   const panels=[...wrap.querySelectorAll('.tab-panel')];
   const navBtns=[...wrap.querySelectorAll('.nav-btn')];
@@ -198,24 +191,23 @@ function bindAdmin(wrap){
   navBtns.forEach(b=>b.addEventListener('click',()=>activate(b.dataset.tab)));
   activate('ilanlar');
 
-  /* ---- İlanlar ---- */
   const ilanPanel = wrap.querySelector('[data-tab="ilanlar"]');
   if (ilanPanel){
     ilanPanel.addEventListener('click', (e)=>{
       const btn = e.target.closest('#act-new-listing');
       if (!btn) return;
-      const form = $('#newListingForm', ilanPanel);
+      const form = wrap.querySelector('#newListingForm');
       if (!form) return;
       form.classList.toggle('hidden');
       if (!form.classList.contains('hidden')){
         resetMediaState();
-        renderPhotoList($('#photosGrid', ilanPanel));
-        const v=$('#inpVideoUrl', ilanPanel); if(v) v.value='';
+        renderPhotoList(wrap.querySelector('#photosGrid'));
+        const v=wrap.querySelector('#inpVideoUrl'); if(v) v.value='';
         form.querySelector('[name="title"]')?.focus();
       }
     });
 
-    const fileInput=$('#filePhotos', ilanPanel);
+    const fileInput=wrap.querySelector('#filePhotos');
     if (fileInput){
       fileInput.addEventListener('change', async (e)=>{
         const files=[...e.target.files||[]];
@@ -224,21 +216,21 @@ function bindAdmin(wrap){
           photoBuffer.push(url);
           if (coverIndex===-1) coverIndex=0;
         }
-        renderPhotoList($('#photosGrid', ilanPanel));
+        renderPhotoList(wrap.querySelector('#photosGrid'));
         fileInput.value='';
       });
     }
-    const btnClear=$('#btnClearPhotos', ilanPanel);
+    const btnClear=wrap.querySelector('#btnClearPhotos');
     btnClear?.addEventListener('click', ()=>{
       resetMediaState();
-      renderPhotoList($('#photosGrid', ilanPanel));
-      const v=$('#inpVideoUrl', ilanPanel); if(v) v.value='';
+      renderPhotoList(wrap.querySelector('#photosGrid'));
+      const v=wrap.querySelector('#inpVideoUrl'); if(v) v.value='';
     });
 
-    const inpVideo=$('#inpVideoUrl', ilanPanel);
+    const inpVideo=wrap.querySelector('#inpVideoUrl');
     inpVideo?.addEventListener('input', (e)=>{ videoUrlTmp=(e.target.value||'').trim(); });
 
-    $('#newListingForm', ilanPanel)?.addEventListener('submit', onSubmitNewListing);
+    wrap.querySelector('#newListingForm')?.addEventListener('submit', onSubmitNewListing);
 
     ilanPanel.addEventListener('click', async (e)=>{
       const pubBtn=e.target.closest('[data-act="toggle-publish"]');
@@ -247,24 +239,23 @@ function bindAdmin(wrap){
       const next = pubBtn.getAttribute('data-next') === '1';
       await publishListing(id,next);
       toast(next?'Yayınlandı':'Yayından alındı');
-      renderListings($('#listingsBox', ilanPanel));
+      renderListings(wrap.querySelector('#listingsBox'));
     });
 
-    renderListings($('#listingsBox', ilanPanel));
+    renderListings(wrap.querySelector('#listingsBox'));
   }
 
-  /* ---- Kullanıcılar ---- */
   const usrPanel = wrap.querySelector('[data-tab="kullanicilar"]');
   if (usrPanel){
     usrPanel.addEventListener('click', (e)=>{
       const btn=e.target.closest('#act-new-user');
       if (!btn) return;
-      const form=$('#newUserForm', usrPanel);
+      const form=wrap.querySelector('#newUserForm');
       form?.classList.toggle('hidden');
       form?.querySelector('[name="fullName"]')?.focus();
     });
 
-    $('#newUserForm', usrPanel)?.addEventListener('submit', async (e)=>{
+    wrap.querySelector('#newUserForm')?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const fd=new FormData(e.currentTarget);
       const rec={
@@ -283,7 +274,7 @@ function bindAdmin(wrap){
       toast('Kullanıcı eklendi');
       e.currentTarget.reset();
       e.currentTarget.classList.add('hidden');
-      renderUsers($('#usersBox', usrPanel));
+      renderUsers(wrap.querySelector('#usersBox'));
     });
 
     usrPanel.addEventListener('click', async (e)=>{
@@ -293,16 +284,13 @@ function bindAdmin(wrap){
       const next =pbtn.getAttribute('data-next')==='1';
       await publishUser(email,next);
       toast(next?'Yayınlandı':'Yayından alındı');
-      renderUsers($('#usersBox', usrPanel));
+      renderUsers(wrap.querySelector('#usersBox'));
     });
 
-    renderUsers($('#usersBox', usrPanel));
+    renderUsers(wrap.querySelector('#usersBox'));
   }
 }
 
-/* =========================================================
-   SUBMIT – İLAN
-   ========================================================= */
 async function onSubmitNewListing(e){
   e.preventDefault();
   const form=e.currentTarget;
@@ -312,7 +300,6 @@ async function onSubmitNewListing(e){
   if (vUrl && !isValidVideoUrl(vUrl)){ alert('Video URL geçersiz.'); return; }
 
   const rec={
-    id: newId('l'), // ← eklenen
     title:(fd.get('title')||'').toString().trim(),
     description:(fd.get('description')||'').toString().trim(),
     price:Number(fd.get('price')||0)||0,
@@ -341,24 +328,20 @@ async function onSubmitNewListing(e){
   form.reset();
   resetMediaState();
   const panel=form.closest('[data-tab="ilanlar"]');
-  renderPhotoList($('#photosGrid', panel));
-  renderListings($('#listingsBox', panel));
+  renderPhotoList(panel.querySelector('#photosGrid'));
+  renderListings(panel.querySelector('#listingsBox'));
 }
 
-/* =========================================================
-   LİSTE – İLAN
-   ========================================================= */
 async function renderListings(box){
   if (!box) return;
-  let items = toArray(await getListings());
-  items = items.slice().reverse();
+  let items = toArray(await getListings()).slice().reverse();
 
   if (!items.length){
     box.innerHTML='<div class="col-span-full p-6 text-center border rounded bg-white text-slate-600">Henüz ilan yok. Sağ üstte "+ Yeni İlan" ile başlayın.</div>';
     return;
   }
   box.innerHTML = items.map(rec=>{
-    const cover=(Array.isArray(rec.photos)&&rec.photos.length&&rec.coverIndex>=0)?rec.photos[rec.coverIndex]:'';
+    const cover=(Array.isArray(rec.photos)&&rec.photos.length&&rec.coverIndex>=0)?rec.photos[rec.coverIndex]:''; 
     const loc=[rec?.location?.province,rec?.location?.district,rec?.location?.neighborhood].filter(Boolean).join(' / ');
     const isPub=!!rec.published;
     return (
@@ -392,9 +375,6 @@ async function renderListings(box){
   }).join('');
 }
 
-/* =========================================================
-   LİSTE – KULLANICI
-   ========================================================= */
 async function renderUsers(box){
   if (!box) return;
   let users = toArray(await getUsers()).slice().reverse();
@@ -440,9 +420,6 @@ async function renderUsers(box){
   }).join('');
 }
 
-/* =========================================================
-   FOTO IZGARASI
-   ========================================================= */
 function renderPhotoList(gridEl){
   if (!gridEl) return;
   if (!photoBuffer.length){
@@ -455,6 +432,7 @@ function renderPhotoList(gridEl){
       '<div class="flex items-center justify-between px-2 py-1 text-sm">'+
         '<div class="flex items-center gap-1">'+
           '<button type="button" class="btn-up px-2 py-0.5 rounded border" data-i="'+i+'">↑</button>'+
+// … diğer butonlar aynı (down/del/cover)
           '<button type="button" class="btn-down px-2 py-0.5 rounded border" data-i="'+i+'">↓</button>'+
           '<button type="button" class="btn-del px-2 py-0.5 rounded border" data-i="'+i+'">×</button>'+
         '</div>'+

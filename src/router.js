@@ -1,41 +1,135 @@
-// K5 - router.js (Admin guard fix eklendi)
-import Home, { mountHome } from './components/Home.js';
-import Listings, { mountListings } from './components/Listings.js';
-import ListingDetail, { mountListingDetail } from './components/ListingDetail.js';
-import Admin from './components/Admin.js';
-import { isAuthenticated } from './auth.js';
+// /src/router.js
+import * as HomeMod from '@/components/Home.js';
+import Listings, { mountListings } from '@/components/Listings.js';
+import ListingDetail from '@/components/ListingDetail.js';
+import Admin from '@/components/Admin.js';
+import Login from '@/components/Login.js';
+import Register from '@/components/Register.js';
+import * as AgentsMod from '@/components/Agents.js';
+import { isAuthenticated } from '@/auth.js';
 
 const viewEl = () => document.getElementById('view');
 
-const routes = [
-  { pattern: /^#\/?$/, render: () => Home(), mount: mountHome },
-  { pattern: /^#\/listings$/, render: () => Listings(), mount: mountListings },
-  { pattern: /^#\/listing\/([^\/]+)$/, render: (id) => ListingDetail(id), mount: (id, root) => mountListingDetail(id, root) },
+const routeTable = [
+  // Home
+  {
+    pattern: /^#\/?$|^#\/home$/,
+    render: () => ({
+      html: HomeMod.default(),
+      mount: (root) => { try { HomeMod.mountHome?.(root); } catch(e){ console.error(e); } }
+    })
+  },
+
+  // Listings
+  {
+    pattern: /^#\/listings$/,
+    render: () => ({
+      html: Listings(),
+      mount: (root) => {
+        try { mountListings?.(root); } catch (e) { console.error(e); }
+        try { window.__mountListings?.(root); } catch (e) { console.error(e); }
+      }
+    })
+  },
+
+  // Listing Detail
+  {
+    pattern: /^#\/listing\/(?<id>[^\/]+)$/,
+    render: (p) => ({
+      html: ListingDetail(p.id),
+      mount: (root) => { try { window.__mountDetail?.(root, p.id); } catch (e) { console.error(e); } }
+    })
+  },
+
+  // Agents
+  {
+    pattern: /^#\/agents$/,
+    render: () => ({
+      html: typeof AgentsMod.default === 'function'
+        ? AgentsMod.default()
+        : `<section class="container-narrow mx-auto"><h1 class="text-2xl font-semibold mb-4">Danışmanlar</h1><p class="text-gray-600">Agents bileşeni yok.</p></section>`,
+      mount: (root) => { try { AgentsMod.mountAgents?.(root); } catch (e) { console.error(e); } }
+    })
+  },
+
+  // Admin (guard)
   {
     pattern: /^#\/admin$/,
     render: () => {
-      if (!isAuthenticated()) { location.hash = '#/login'; return ''; }
-      return Admin();
+      if (!isAuthenticated()) {
+        const redirect = '#/admin';
+        return {
+          html: Login({ redirect }),
+          mount: (root) => { try { window.__mountLogin?.(root, { redirect }); } catch (e) { console.error(e); } }
+        };
+      }
+      return {
+        html: Admin(),
+        mount: (root) => { try { window.__mountAdmin?.(root); } catch (e) { console.error(e); } }
+      };
     }
-  }
+  },
+
+  // Login
+  {
+    pattern: /^#\/login(?:\?redirect=(?<to>.*))?$/,
+    render: (p) => {
+      const redirect = p.to ? decodeURIComponent(p.to) : '#/';
+      return {
+        html: Login({ redirect }),
+        mount: (root) => { try { window.__mountLogin?.(root, { redirect }); } catch (e) { console.error(e); } }
+      };
+    }
+  },
+
+  // Register
+  {
+    pattern: /^#\/register(?:\?redirect=(?<to>.*))?$/,
+    render: (p) => {
+      const redirect = p.to ? decodeURIComponent(p.to) : '#/';
+      return {
+        html: Register({ redirect }),
+        mount: (root) => { try { window.__mountRegister?.(root, { redirect }); } catch (e) { console.error(e); } }
+      };
+    }
+  },
 ];
 
+export function renderRoute() {
+  const view = viewEl();
+  if (!view) return;
+  const hash = window.location.hash || '#/';
+
+  for (const r of routeTable) {
+    const m = hash.match(r.pattern);
+    if (!m) continue;
+
+    const params = m.groups || {};
+    const out = r.render(params);
+    const html = typeof out === 'string' ? out : (out?.html || '');
+
+    view.innerHTML = `<div class="container mx-auto container-narrow px-4 py-6">${html}</div>`;
+
+    if (out && typeof out.mount === 'function') {
+      try { out.mount(view); } catch (e) { console.error(e); }
+    }
+    return;
+  }
+
+  // 404
+  view.innerHTML = `
+    <div class="container mx-auto container-narrow px-4 py-12 text-center">
+      <h1 class="text-2xl font-semibold mb-2">Bulunamadı</h1>
+      <a href="#/listings" class="inline-flex px-4 py-2 rounded-lg bg-brand text-white">Listeye dön</a>
+    </div>`;
+}
+
 export function initRouter() {
-  const renderRoute = () => {
-    const hash = location.hash || '#/';
-    const route = routes.find(r => r.pattern.test(hash));
-    const view = viewEl();
-    if (!route || !view) return;
-
-    const match = hash.match(route.pattern);
-    const args = match ? match.slice(1) : [];
-
-    view.innerHTML = route.render(...args);
-    if (typeof route.mount === 'function') route.mount(...args, view);
-  };
-
-  window.addEventListener('hashchange', renderRoute);
-  window.addEventListener('listings:changed', renderRoute);
-  window.addEventListener('auth:changed', renderRoute);
+  window.addEventListener('hashchange', renderRoute, { passive: true });
   renderRoute();
+}
+
+export function navigateTo(hash) {
+  if (!hash.startsWith('#')) window.location.hash = '#' + hash.replace(/^\//, '');
+  else window.location.hash = hash;
 }

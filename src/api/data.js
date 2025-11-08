@@ -1,74 +1,105 @@
-// K5 - data.js (getListingById eklendi)
-const LKEY = 'publicListings.v2';
+// /src/api/data.js
+// LocalStorage tabanlı mock (K6’da gerçek API adapter’ına geçilecek)
+
+const LKEY = 'publicListings.v3';
 const UKEY = 'publicUsers.v1';
 const AUTH = 'publicAuth.v1';
 
-export function newId(p='x'){ return p + Math.random().toString(36).slice(2,8) + Date.now().toString(36).slice(-4); }
+// ---- helpers ----
+function readJSON(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : (fallback ?? null);
+  } catch {
+    return fallback ?? null;
+  }
+}
+function writeJSON(key, val) {
+  localStorage.setItem(key, JSON.stringify(val));
+}
+
+export function newId(p='x'){
+  return p + Math.random().toString(36).slice(2,8) + Date.now().toString(36).slice(-4);
+}
 
 // ---- Listings ----
 export function getListings() {
-  try { return JSON.parse(localStorage.getItem(LKEY)||'[]'); } catch { return []; }
+  return readJSON(LKEY, []) || [];
 }
 export function saveListings(arr) {
-  localStorage.setItem(LKEY, JSON.stringify(Array.isArray(arr)?arr:[]));
+  writeJSON(LKEY, Array.isArray(arr) ? arr : []);
+  window.dispatchEvent(new Event('listings:changed'));
 }
 export function upsertListing(obj) {
   const arr = getListings();
-  const i = arr.findIndex(x => x.id===obj.id);
   const now = new Date().toISOString();
-  if (i>=0) arr[i] = { ...arr[i], ...obj, updatedAt: now };
-  else arr.push({ ...obj, createdAt: now, updatedAt: now });
+  const i = arr.findIndex(x => x.id === obj.id);
+  if (i >= 0) {
+    arr[i] = { ...arr[i], ...obj, updatedAt: now };
+  } else {
+    const id = obj.id || newId('l');
+    arr.push({ ...obj, id, createdAt: now, updatedAt: now });
+  }
   saveListings(arr);
-  window.dispatchEvent(new Event('listings:changed'));
-  return obj.id;
+  return obj.id || arr[arr.length-1].id;
 }
 export function deleteListing(id) {
-  saveListings(getListings().filter(x => x.id!==id));
-  window.dispatchEvent(new Event('listings:changed'));
+  saveListings(getListings().filter(x => x.id !== id));
 }
 export function findListing(id) {
-  return (getListings()||[]).find(x => x.id===id);
+  return (getListings() || []).find(x => x.id === id);
 }
-export async function getListingById(id) {
-  const arr = await getListings(); // sync da olsa sorun yok
-  return (Array.isArray(arr) ? arr : []).find(x => x.id === id);
+export function getListingById(id) { // K5 uyum
+  return findListing(id);
 }
-export function publishListing(id, published=true) {
+export function publishListing(id, published = true) {
   const arr = getListings();
-  const i = arr.findIndex(x => x.id===id);
-  if (i>=0) { arr[i].published = !!published; saveListings(arr); window.dispatchEvent(new Event('listings:changed')); }
+  const i = arr.findIndex(x => x.id === id);
+  if (i >= 0) { arr[i].published = !!published; saveListings(arr); }
 }
-export function setCover(id, coverIndex=0) {
+export function setCover(id, coverIndex = 0) {
   const arr = getListings();
-  const i = arr.findIndex(x => x.id===id);
-  if (i>=0) { arr[i].coverIndex = Number(coverIndex)||0; saveListings(arr); window.dispatchEvent(new Event('listings:changed')); }
+  const i = arr.findIndex(x => x.id === id);
+  if (i >= 0) { arr[i].coverIndex = Number(coverIndex)||0; saveListings(arr); }
 }
 
 // ---- Users ----
 export function getUsers() {
-  try { return JSON.parse(localStorage.getItem(UKEY)||'[]'); } catch { return []; }
+  return readJSON(UKEY, []) || [];
 }
 export function saveUsers(arr) {
-  localStorage.setItem(UKEY, JSON.stringify(Array.isArray(arr)?arr:[]));
+  writeJSON(UKEY, Array.isArray(arr) ? arr : []);
   window.dispatchEvent(new Event('users:changed'));
 }
 export function getUserByEmail(email) {
   const e = String(email||'').toLowerCase().trim();
-  return getUsers().find(u => String(u.email||'').toLowerCase().trim()===e);
+  return getUsers().find(u => String(u.email||'').toLowerCase().trim() === e);
 }
-export function publishUser(email, published=true) {
+export function publishUser(email, published = true) {
   const arr = getUsers();
   const e = String(email||'').toLowerCase().trim();
-  const i = arr.findIndex(u => String(u.email||'').toLowerCase().trim()===e);
-  if (i>=0) { arr[i].published = !!published; saveUsers(arr); }
+  const i = arr.findIndex(u => String(u.email||'').toLowerCase().trim() === e);
+  if (i >= 0) { arr[i].published = !!published; saveUsers(arr); }
 }
 
-// ---- Auth session (data-layer) ----
+// ---- Auth session (data-katmanı) ----
 export function getCurrentUser() {
-  try { return JSON.parse(localStorage.getItem(AUTH)||'null'); } catch { return null; }
+  return readJSON(AUTH, null);
 }
 export function setCurrentUser(u) {
-  if (u) localStorage.setItem(AUTH, JSON.stringify(u));
+  if (u) writeJSON(AUTH, u);
   else localStorage.removeItem(AUTH);
   window.dispatchEvent(new Event('auth:changed'));
 }
+export function logout() { setCurrentUser(null); }
+
+// ---- seed (yoksa oluştur) ----
+(function seedOnce(){
+  if (!readJSON(LKEY)) writeJSON(LKEY, []);
+  if (!readJSON(UKEY)) {
+    writeJSON(UKEY, [
+      { id:'u1', fullName:'Admin Kullanıcı',  email:'admin@local',  pass:'1234', role:'admin',  published:true },
+      { id:'u2', fullName:'Broker Demo',      email:'broker@local', pass:'1234', role:'broker', published:true },
+    ]);
+  }
+})();
