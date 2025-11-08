@@ -1,0 +1,66 @@
+// /src/api/data.js
+const LS = {
+  listings: 'et_listings',
+  users: 'et_users',
+  session: 'et_session',
+};
+
+function read(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+  catch { return fallback; }
+}
+function write(key, val) {
+  localStorage.setItem(key, JSON.stringify(val));
+}
+
+function ensureSeeds() {
+  if (!localStorage.getItem(LS.listings)) write(LS.listings, []);
+  if (!localStorage.getItem(LS.users)) {
+    // basit admin seed
+    write(LS.users, [{ id: 'u_admin', email: 'admin@demo.tld', pass: '123456', role: 'admin' }]);
+  }
+}
+ensureSeeds();
+
+export function newId(prefix = 'id') {
+  return `${prefix}_${Math.random().toString(36).slice(2, 9)}_${Date.now().toString(36)}`;
+}
+
+// ---- LISTINGS ----
+export function getListings() {
+  return read(LS.listings, []);
+}
+
+export function upsertListing(payload) {
+  const all = getListings();
+  if (!payload.id) payload.id = newId('lst');
+  const idx = all.findIndex(x => x.id === payload.id);
+  if (idx === -1) all.push(payload);
+  else all[idx] = { ...all[idx], ...payload };
+  write(LS.listings, all);
+  window.dispatchEvent(new CustomEvent('listings:changed'));
+  return payload;
+}
+
+export function deleteListing(id) {
+  const all = getListings().filter(x => x.id !== id);
+  write(LS.listings, all);
+  window.dispatchEvent(new CustomEvent('listings:changed'));
+}
+
+// ---- USERS & SESSION ----
+export function getUsers() {
+  return read(LS.users, []);
+}
+export function saveUsers(users) {
+  write(LS.users, users);
+}
+
+export function getCurrentUser() {
+  return read(LS.session, null);
+}
+export function setCurrentUser(userOrNull) {
+  if (userOrNull) write(LS.session, userOrNull);
+  else localStorage.removeItem(LS.session);
+  window.dispatchEvent(new CustomEvent('auth:changed', { detail: { user: userOrNull } }));
+}

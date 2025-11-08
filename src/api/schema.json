@@ -1,0 +1,179 @@
+{
+  "$schema": "EmlakTurkListingSchema.v1",
+  "enums": {
+    "TransactionType": ["Satılık", "Kiralık"],
+    "PropertyClass": ["Konut", "Ticari", "Arsa"],
+    "HeatingType": ["Yok", "Soba", "Doğalgaz Kombi", "Merkezi", "VRV/VRS", "Klima", "Jeotermal", "Diğer"],
+    "UsageStatus": ["Boş", "Kiracılı", "Mülk Sahibi Kullanımında"],
+    "Balcony": ["Yok", "Var", "Fransız Balkon"],
+    "BathroomCount": ["1", "2", "3", "4+"]
+  },
+  "core": {
+    "fields": [
+      { "name": "transactionType", "type": "select", "enumRef": "TransactionType", "required": true, "label": "İlan Tipi" },
+      { "name": "propertyClass", "type": "select", "enumRef": "PropertyClass", "required": true, "label": "Sınıf" },
+      { "name": "subcategory", "type": "select", "enumDynamicOf": "propertyClass", "required": true, "label": "Alt Tür" },
+
+      { "name": "title", "type": "string", "required": true, "label": "Başlık" },
+      { "name": "description", "type": "string", "required": false, "label": "Açıklama" },
+      { "name": "price", "type": "number", "required": true, "label": "Fiyat (₺)" },
+      { "name": "deposit", "type": "number", "required": false, "label": "Depozito (Kiralık)" },
+      { "name": "dues", "type": "number", "required": false, "label": "Aidat (TL/ay)" },
+
+      { "name": "location.province", "type": "string", "required": true, "label": "İl" },
+      { "name": "location.district", "type": "string", "required": true, "label": "İlçe" },
+      { "name": "location.neighborhood", "type": "string", "required": false, "label": "Mahalle" }
+    ]
+  },
+  "classes": {
+    "Konut": {
+      "subcategories": {
+        "Daire": {
+          "fields": [
+            { "name": "roomPlan", "type": "string", "label": "Oda Planı (örn. 2+1)" },
+            { "name": "grossArea", "type": "number", "label": "Brüt m²" },
+            { "name": "netArea", "type": "number", "label": "Net m²" },
+            { "name": "buildingAge", "type": "number", "label": "Bina Yaşı" },
+            { "name": "floorNumber", "type": "number", "label": "Bulunduğu Kat" },
+            { "name": "totalFloors", "type": "number", "label": "Bina Kat Sayısı" },
+            { "name": "heating", "type": "select", "enumRef": "HeatingType", "label": "Isıtma" },
+            { "name": "bathrooms", "type": "select", "enumRef": "BathroomCount", "label": "Banyo Sayısı" },
+            { "name": "balcony", "type": "select", "enumRef": "Balcony", "label": "Balkon" },
+            { "name": "elevator", "type": "boolean", "label": "Asansör" },
+            { "name": "parking", "type": "boolean", "label": "Otopark" },
+            { "name": "furnished", "type": "boolean", "label": "Eşyalı" },
+            { "name": "usageStatus", "type": "select", "enumRef": "UsageStatus", "label": "Kullanım" }
+          ]
+        },
+        "Villa": {
+          "fields": [
+            { "name": "grossArea", "type": "number", "label": "Brüt m²" },
+            { "name": "netArea", "type": "number", "label": "Net m²" },
+            { "name": "gardenArea", "type": "number", "label": "Bahçe m²" },
+            { "name": "buildingAge", "type": "number", "label": "Bina Yaşı" },
+            { "name": "villaFloors", "type": "number", "label": "Kat Sayısı" },
+            { "name": "pool", "type": "select", "options": ["Yok","Özel","Ortak"], "label": "Havuz" },
+            { "name": "parkingCapacity", "type": "number", "label": "Otopark Kapasitesi" },
+            { "name": "fireplace", "type": "boolean", "label": "Şömine" },
+            { "name": "sauna", "type": "boolean", "label": "Sauna" }
+          ]
+        },
+        "Müstakil Ev": {
+          "fields": [
+            { "name": "grossArea", "type": "number", "label": "Brüt m²" },
+            { "name": "netArea", "type": "number", "label": "Net m²" },
+            { "name": "lotArea", "type": "number", "label": "Arsa m²" },
+            { "name": "buildingAge", "type": "number", "label": "Bina Yaşı" },
+            { "name": "houseFloors", "type": "number", "label": "Kat Sayısı" },
+            { "name": "usageStatus", "type": "select", "enumRef": "UsageStatus", "label": "Kullanım" }
+          ]
+        },
+        "Rezidans Dairesi": {
+          "fields": [
+            { "name": "roomPlan", "type": "string", "label": "Oda Planı" },
+            { "name": "grossArea", "type": "number", "label": "Brüt m²" },
+            { "name": "netArea", "type": "number", "label": "Net m²" },
+            { "name": "floorNumber", "type": "number", "label": "Bulunduğu Kat" },
+            { "name": "totalFloors", "type": "number", "label": "Bina Kat Sayısı" },
+            { "name": "residenceServices", "type": "select", "options": ["Güvenlik","Resepsiyon","Teknik Servis","Spor Salonu","Havuz"], "multiple": true, "label": "Rezidans Hizmetleri" }
+          ]
+        },
+        "Yazlık": {
+          "fields": [
+            { "name": "grossArea", "type": "number", "label": "Brüt m²" },
+            { "name": "netArea", "type": "number", "label": "Net m²" },
+            { "name": "seaDistance", "type": "number", "label": "Denize Uzaklık (m)" }
+          ]
+        }
+      }
+    },
+    "Ticari": {
+      "subcategories": {
+        "Dükkan/Mağaza": {
+          "fields": [
+            { "name": "grossArea", "type": "number", "label": "Brüt m²" },
+            { "name": "netArea", "type": "number", "label": "Net m²" },
+            { "name": "frontageWidth", "type": "number", "label": "Cephe (m)" },
+            { "name": "unitFloors", "type": "number", "label": "Birim Kat Sayısı" },
+            { "name": "ceilingHeight", "type": "number", "label": "Tavan Yüksekliği (m)" },
+            { "name": "intendedUse", "type": "select", "options": ["Gıda","Perakende","Ofis","Hizmet","Diğer"], "label": "Kullanım Amacı" },
+            { "name": "chimney", "type": "boolean", "label": "Baca" },
+            { "name": "wcCount", "type": "number", "label": "WC Sayısı" }
+          ]
+        },
+        "Ofis/Büro": {
+          "fields": [
+            { "name": "grossArea", "type": "number", "label": "Brüt m²" },
+            { "name": "netArea", "type": "number", "label": "Net m²" },
+            { "name": "buildingName", "type": "string", "label": "Bina/Plaza" },
+            { "name": "floorNumber", "type": "number", "label": "Bulunduğu Kat" },
+            { "name": "roomCount", "type": "number", "label": "Oda/Bölüm" },
+            { "name": "hvac", "type": "select", "options": ["VRV/VRS","Split Klima","Merkezi","Yok"], "label": "Isıtma/Soğutma" },
+            { "name": "generator", "type": "boolean", "label": "Jeneratör" },
+            { "name": "parking", "type": "boolean", "label": "Otopark" }
+          ]
+        },
+        "Depo/Antrepo": {
+          "fields": [
+            { "name": "grossArea", "type": "number", "label": "Brüt m²" },
+            { "name": "ceilingHeight", "type": "number", "label": "Tavan (m)" },
+            { "name": "loadingDockCount", "type": "number", "label": "Yükleme Rampası" },
+            { "name": "truckAccess", "type": "boolean", "label": "Tır Girişi" },
+            { "name": "floorBearing", "type": "number", "label": "Zemin Taşıma (ton/m²)" },
+            { "name": "coldStorage", "type": "boolean", "label": "Soğuk Hava Deposu" }
+          ]
+        },
+        "Fabrika": {
+          "fields": [
+            { "name": "closedArea", "type": "number", "label": "Kapalı Alan m²" },
+            { "name": "openArea", "type": "number", "label": "Açık Alan m²" },
+            { "name": "electricPowerKVA", "type": "number", "label": "Elektrik Gücü (kVA)" },
+            { "name": "craneWay", "type": "boolean", "label": "Vinç Yolu" },
+            { "name": "craneCapacity", "type": "number", "label": "Vinç Kapasitesi (ton)" },
+            { "name": "adminBuildingArea", "type": "number", "label": "İdari Bina m²" }
+          ]
+        },
+        "Otel/Turistik Tesis": {
+          "fields": [
+            { "name": "roomCount", "type": "number", "label": "Oda Sayısı" },
+            { "name": "bedCapacity", "type": "number", "label": "Yatak Kapasitesi" },
+            { "name": "starRating", "type": "number", "label": "Yıldız" },
+            { "name": "seaDistance", "type": "number", "label": "Denize Uzaklık (m)" },
+            { "name": "beachAccess", "type": "boolean", "label": "Plaj Hakkı" }
+          ]
+        }
+      }
+    },
+    "Arsa": {
+      "subcategories": {
+        "İmarlı Arsa": {
+          "fields": [
+            { "name": "landArea", "type": "number", "label": "Arsa m²" },
+            { "name": "kaks", "type": "number", "label": "Emsal (KAKS)" },
+            { "name": "hmax", "type": "number", "label": "Hmax (m/kat)" },
+            { "name": "zoningType", "type": "select", "options": ["Konut","Ticari","Sanayi","Turizm","Karma"], "label": "İmar Türü" },
+            { "name": "buildableArea", "type": "number", "label": "İnşaat Alanı (m²)" }
+          ]
+        },
+        "Tarla": {
+          "fields": [
+            { "name": "landArea", "type": "number", "label": "Arazi m²" },
+            { "name": "titleDeed", "type": "select", "options": ["Tarla","Bağ","Bahçe"], "label": "Tapu Niteliği" },
+            { "name": "roadFrontage", "type": "boolean", "label": "Yola Cephe" },
+            { "name": "cadastralInfo", "type": "string", "label": "Pafta/Ada/Parsel" },
+            { "name": "water", "type": "boolean", "label": "Su" },
+            { "name": "electricity", "type": "boolean", "label": "Elektrik" }
+          ]
+        },
+        "Bağ/Bahçe": {
+          "fields": [
+            { "name": "landArea", "type": "number", "label": "Arazi m²" },
+            { "name": "treeType", "type": "string", "label": "Ağaç Türü" },
+            { "name": "treeAge", "type": "number", "label": "Ağaç Yaşı" },
+            { "name": "irrigation", "type": "select", "options": ["Yok","Salma","Damlama","Yağmurlama"], "label": "Sulama" }
+          ]
+        }
+      }
+    }
+  }
+}

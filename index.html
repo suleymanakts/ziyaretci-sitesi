@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EmlakTürk – Ziyaretçi Sitesi</title>
+  <link rel="icon" href="/favicon.ico" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    html, body, #app { height: 100%; }
+    body {
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+    .container-narrow { max-width: 1200px; }
+    .fade-in { animation: fade .18s ease-in; }
+    @keyframes fade {
+      from { opacity: .6; transform: translateY(2px); }
+      to { opacity: 1; transform: none; }
+    }
+    .glass {
+      backdrop-filter: saturate(1.2) blur(6px);
+      background: rgba(255, 255, 255, .8);
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 font-inter">
+  <div id="app" class="min-h-full flex flex-col">
+    <!-- HEADER (router dokunmaz) -->
+    <header id="header" class="bg-white shadow-sm"></header>
+
+    <!-- ANA GÖRÜNÜM (router burayı değiştirir) -->
+    <main id="view" class="flex-1"></main>
+
+    <!-- FOOTER -->
+    <footer id="footer" class="p-6 text-center text-sm text-gray-500">
+      © 2025 EmlakTürk Franchise Sistemi
+    </footer>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

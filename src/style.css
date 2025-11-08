@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Küçük yardımcı stiller */
+html,body,#app { height: 100%; }
+.fade-in { animation: fade .18s ease-in; }
+@keyframes fade {
+  from { opacity: .6; transform: translateY(2px); }
+  to { opacity: 1; transform: none; }
+}
+.container-narrow { max-width: 1200px; }
+.glass { backdrop-filter: saturate(1.2) blur(6px); background: rgba(255,255,255,.8); }
+@layer base {
+  html { font-family: theme('fontFamily.inter'); }
+}

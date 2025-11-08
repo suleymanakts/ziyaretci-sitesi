@@ -1,0 +1,16 @@
+[
+  {
+    "province": "İstanbul",
+    "districts": [
+      { "district": "Kadıköy", "neighborhoods": ["Caddebostan","Fenerbahçe","Osmanağa"] },
+      { "district": "Üsküdar", "neighborhoods": ["Kuzguncuk","Çengelköy","Beylerbeyi"] }
+    ]
+  },
+  {
+    "province": "İzmir",
+    "districts": [
+      { "district": "Karşıyaka", "neighborhoods": ["Bostanlı","Mavişehir","Alaybey"] },
+      { "district": "Bornova", "neighborhoods": ["Kazımdirik","Erzene","Evka-3"] }
+    ]
+  }
+]

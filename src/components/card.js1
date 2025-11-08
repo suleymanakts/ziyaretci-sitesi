@@ -1,0 +1,30 @@
+// components/Card.js
+// İlan kartı (liste ve ana sayfada)
+
+import { formatPrice, esc } from '../utils/format.js';
+
+export default function Card(item) {
+  const img = (item.images && item.images[0]) || '';
+  const sub = [
+    item.city, 
+    item.district, 
+    item.type, 
+    (item.rooms || '') || `${item.area_m2} m²`
+  ].filter(Boolean).join(' · ');
+
+  return `
+    <a href="#/listing/${item.id}" class="block bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-sm transition">
+      <div class="aspect-[4/3] bg-slate-100 relative">
+        ${img ? `<img src="${img}" alt="${esc(item.title)}" class="w-full h-full object-cover">` : ''}
+        <span class="absolute top-2 left-2 text-xs bg-white/90 border border-slate-200 px-2 py-1 rounded-full">${esc(item.type)}</span>
+      </div>
+      <div class="p-4">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="font-semibold line-clamp-1">${esc(item.title)}</h3>
+          <span class="text-brand font-bold text-sm whitespace-nowrap">${formatPrice(item.price)}</span>
+        </div>
+        <div class="mt-1 text-xs text-slate-600 line-clamp-1">${esc(sub)}</div>
+      </div>
+    </a>
+  `;
+}
