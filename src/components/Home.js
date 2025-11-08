@@ -6,7 +6,7 @@ export default function Home(){
   <section id="home-wrap" class="max-w-7xl mx-auto p-4 space-y-8">
     <!-- Arama Çubuğu -->
     <div class="bg-white border rounded-xl p-4">
-      <h1 class="text-xl font-semibold mb-3">Emlak arayın</h1>
+      <h1 class="text-xl font-semibold mb-3">Emlak arayın - test</h1>
       <div class="grid md:grid-cols-[1fr_1fr_140px] gap-2">
         <input id="q-loc" class="px-3 py-2 rounded border" placeholder="İl / İlçe / Mahalle">
         <select id="q-class" class="px-3 py-2 rounded border">
@@ -19,7 +19,7 @@ export default function Home(){
       </div>
     </div>
 
-    <!-- Son İlanlar -->
+    <!-- Son İlanlar deneme -->
     <div>
       <div class="mb-3 flex items-center justify-between">
         <h2 class="text-xl font-semibold">Son İlanlar</h2>
