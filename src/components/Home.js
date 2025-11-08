@@ -1,69 +1,104 @@
 // /src/components/Home.js
-import { getListings } from '../api/data.js';
+// Ana sayfa: son ilanlar + arama (async data uyumlu)
 
-export default function Home(){
-  const html = `
-  <section id="home-wrap" class="max-w-7xl mx-auto p-4 space-y-8">
-    <!-- Arama Çubuğu -->
-    <div class="bg-white border rounded-xl p-4">
-      <h1 class="text-xl font-semibold mb-3">Emlak arayın - test</h1>
-      <div class="grid md:grid-cols-[1fr_1fr_140px] gap-2">
-        <input id="q-loc" class="px-3 py-2 rounded border" placeholder="İl / İlçe / Mahalle">
-        <select id="q-class" class="px-3 py-2 rounded border">
-          <option value="">Sınıf (hepsi)</option>
-          <option value="Konut">Konut</option>
-          <option value="Ticari">Ticari</option>
-          <option value="Arsa">Arsa</option>
-        </select>
-        <a id="q-btn" class="px-3 py-2 rounded bg-blue-600 text-white text-center" href="#/listings">Ara</a>
-      </div>
-    </div>
+import { getListings } from '@/api/data.js';
 
-    <!-- Son İlanlar deneme -->
-    <div>
-      <div class="mb-3 flex items-center justify-between">
-        <h2 class="text-xl font-semibold">Son İlanlar</h2>
-        <a class="text-sm text-blue-600 hover:underline" href="#/listings">Tümünü gör</a>
+export default function Home() {
+  // HTML’i bas; veri mount’ta çekilecek
+  queueMicrotask(() => mountHome(document));
+  return `
+    <section class="container-narrow mx-auto py-6" data-home-root>
+      <div class="mb-6">
+        <h1 class="text-2xl font-semibold mb-2">EmlakTürk</h1>
+        <p class="text-gray-600">Yeni eklenen ve güncellenen ilanları keşfet.</p>
       </div>
-      <div id="home-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        <div class="col-span-full p-6 text-center border rounded bg-white text-slate-600">Yükleniyor…</div>
+
+      <form id="homeSearch" class="flex gap-2 mb-6">
+        <input id="homeQ" name="q" placeholder="Şehir, ilçe, mahalle, başlık…" class="flex-1 border rounded-lg px-3 py-2" autocomplete="off" />
+        <button class="px-4 py-2 rounded-lg bg-brand text-white">Ara</button>
+      </form>
+
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-xl font-semibold">Son ilanlar</h2>
+        <a class="text-sm text-brand underline" href="#/listings">Tüm ilanlar</a>
       </div>
-    </div>
-  </section>`;
-  queueMicrotask(mountHome);
-  return html;
+
+      <div id="homeGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        ${skeletonCards(6)}
+      </div>
+    </section>
+  `;
 }
 
-async function mountHome(){
-  const grid = document.getElementById('home-grid');
-  if (!grid) return;
+export async function mountHome(root) {
+  const host = root?.querySelector?.('[data-home-root]') || document.querySelector('[data-home-root]');
+  if (!host) return;
+  const form = host.querySelector('#homeSearch');
+  const input = host.querySelector('#homeQ');
+  const grid  = host.querySelector('#homeGrid');
 
-  let list = await Promise.resolve(getListings());
-  list = Array.isArray(list) ? list : (Array.isArray(list?.items) ? list.items : (list && typeof list==='object' ? Object.values(list) : []));
-  const items = list.filter(x=>!!x.published).slice(-6).reverse();
+  input.value = sessionStorage.getItem('publicSearch.q') || '';
 
-  if (!items.length){
-    grid.innerHTML = '<div class="col-span-full p-6 text-center border rounded bg-white text-slate-600">Henüz yayınlanmış ilan yok.</div>';
-    return;
-  }
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = String(input.value || '').trim();
+    sessionStorage.setItem('publicSearch.q', q);
+    location.hash = '#/listings';
+  });
 
-  grid.innerHTML = items.map(rec=>{
-    const cover=(Array.isArray(rec.photos)&&rec.photos.length&&rec.coverIndex>=0)?rec.photos[rec.coverIndex]:'';
-    const loc=[rec?.location?.province,rec?.location?.district,rec?.location?.neighborhood].filter(Boolean).join(' / ');
-    return (
-      '<article class="border rounded-lg bg-white overflow-hidden hover:shadow-sm transition">'+
-        (cover
-          ? '<div class="aspect-[16/9] bg-slate-100"><img class="w-full h-full object-cover" src="'+cover+'" alt=""></div>'
-          : '<div class="aspect-[16/9] bg-slate-50 grid place-items-center text-slate-400 text-sm">Kapak yok</div>'
-        )+
-        '<div class="p-3">'+
-          '<h3 class="font-medium line-clamp-2">'+(rec.title||'')+'</h3>'+
-          '<div class="text-xs text-slate-500 mt-1">'+(loc||'-')+'</div>'+
-          '<div class="mt-3">'+
-            '<a class="px-2.5 py-1 text-sm rounded border" href="#/listing/'+rec.id+'">Detay</a>'+
-          '</div>'+
-        '</div>'+
-      '</article>'
-    );
-  }).join('');
+  const rerender = async () => {
+    const q = String(input.value || '').trim();
+    const items = await readLatest(q);
+    grid.innerHTML = items.length ? items.map(renderCard).join('') : emptyState();
+  };
+
+  input.addEventListener('input', rerender);
+  window.addEventListener('listings:changed', rerender);
+
+  await rerender();
 }
+
+// ---- helpers ----
+async function readLatest(q = '') {
+  const all = await getListings();
+  const norm = (Array.isArray(all) ? all : []).map(x => ({
+    ...x,
+    _ts: toTs(x.updatedAt) || toTs(x.createdAt) || 0
+  })).sort((a, b) => b._ts - a._ts);
+  return filterByQuery(norm, q).slice(0, 6);
+}
+function filterByQuery(arr, q) {
+  if (!q) return arr;
+  const needle = q.toLowerCase();
+  return arr.filter(x => {
+    const txt = [
+      x.title, x.description, x.type, x.price,
+      x?.location?.province, x?.location?.district, x?.location?.neighborhood
+    ].map(s => String(s || '').toLowerCase()).join(' ');
+    return txt.includes(needle);
+  });
+}
+function toTs(v) { try { return v ? new Date(v).getTime() : 0; } catch { return 0; } }
+function esc(s='') { return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+function fmt(n){ return n==null?'':new Intl.NumberFormat('tr-TR').format(Number(n))+' ₺'; }
+function renderCard(item) {
+  const cover = (item.photos && item.photos[item.coverIndex || 0]) || '';
+  const loc = [item?.location?.province, item?.location?.district].filter(Boolean).join(' / ');
+  return `
+    <a href="#/listing/${esc(item.id)}" class="block border rounded-xl overflow-hidden bg-white hover:shadow">
+      ${cover ? `<img class="w-full h-40 object-cover" src="${esc(cover)}" alt="">` : ''}
+      <div class="p-3">
+        <div class="font-semibold truncate">${esc(item.title||'(Başlık yok)')}</div>
+        <div class="text-sm text-gray-600 truncate">${esc(loc)}</div>
+        ${item.price!=null ? `<div class="mt-1 font-medium">${fmt(item.price)}</div>` : ''}
+      </div>
+    </a>
+  `;
+}
+function emptyState(){ return `<div class="col-span-full text-gray-600">Gösterilecek ilan yok.</div>`; }
+function skeletonCards(n){ return Array.from({length:n}).map(()=>`
+  <div class="border rounded-xl p-3 bg-white">
+    <div class="w-full h-40 bg-slate-100 rounded mb-2"></div>
+    <div class="h-4 bg-slate-100 rounded w-3/4 mb-1"></div>
+    <div class="h-3 bg-slate-100 rounded w-1/2"></div>
+  </div>`).join(''); }

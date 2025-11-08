@@ -4,8 +4,9 @@ import {
   getUsers, saveUsers, publishUser,
 } from '../api/data.js';
 
-// ---- yardımcılar ----
-const $ = (sel, root=document)=>root.querySelector(sel);
+/* -------------------- yardımcılar -------------------- */
+const $ = (sel, root = document) => root.querySelector(sel);
+
 function toast(msg){
   const t=document.createElement('div');
   t.textContent=msg||'';
@@ -35,13 +36,13 @@ function toArray(any){
   return [];
 }
 
-// ---- medya state ----
+/* -------------------- medya state -------------------- */
 let photoBuffer=[]; let coverIndex=-1; let videoUrlTmp='';
 function resetMediaState(){ photoBuffer=[]; coverIndex=-1; videoUrlTmp=''; }
 
-// ===================================================================
-// RENDER
-// ===================================================================
+/* =========================================================
+   RENDER
+   ========================================================= */
 export default function Admin(){
   const html =
 `<section id="admin-wrap" class="max-w-7xl mx-auto p-4">
@@ -186,9 +187,9 @@ export default function Admin(){
   return html;
 }
 
-// ===================================================================
-// BIND
-// ===================================================================
+/* =========================================================
+   BIND
+   ========================================================= */
 function bindAdmin(wrap){
   const panels=[...wrap.querySelectorAll('.tab-panel')];
   const navBtns=[...wrap.querySelectorAll('.nav-btn')];
@@ -197,9 +198,9 @@ function bindAdmin(wrap){
     panels.forEach(p=>p.classList.toggle('hidden', p.dataset.tab!==tab));
   };
   navBtns.forEach(b=>b.addEventListener('click',()=>activate(b.dataset.tab)));
-  activate('ilanlar'); // başlangıç
+  activate('ilanlar'); // açılışta İlanlar
 
-  // --- İlanlar sekmesi ---
+  /* ---- İlanlar sekmesi ---- */
   const ilanPanel = wrap.querySelector('[data-tab="ilanlar"]');
   if (ilanPanel){
     ilanPanel.addEventListener('click', (e)=>{
@@ -254,7 +255,7 @@ function bindAdmin(wrap){
     renderListings($('#listingsBox', ilanPanel));
   }
 
-  // --- Kullanıcılar sekmesi ---
+  /* ---- Kullanıcılar sekmesi ---- */
   const usrPanel = wrap.querySelector('[data-tab="kullanicilar"]');
   if (usrPanel){
     usrPanel.addEventListener('click', (e)=>{
@@ -301,9 +302,9 @@ function bindAdmin(wrap){
   }
 }
 
-// ===================================================================
-// SUBMIT – İLAN
-// ===================================================================
+/* =========================================================
+   SUBMIT – İLAN
+   ========================================================= */
 async function onSubmitNewListing(e){
   e.preventDefault();
   const form=e.currentTarget;
@@ -345,9 +346,9 @@ async function onSubmitNewListing(e){
   renderListings($('#listingsBox', panel));
 }
 
-// ===================================================================
-// LİSTE – İLAN
-// ===================================================================
+/* =========================================================
+   LİSTE – İLAN
+   ========================================================= */
 async function renderListings(box){
   if (!box) return;
   let items = toArray(await getListings());
@@ -392,9 +393,9 @@ async function renderListings(box){
   }).join('');
 }
 
-// ===================================================================
-// LİSTE – KULLANICI
-// ===================================================================
+/* =========================================================
+   LİSTE – KULLANICI
+   ========================================================= */
 async function renderUsers(box){
   if (!box) return;
   let users = toArray(await getUsers()).slice().reverse();
@@ -414,7 +415,7 @@ async function renderUsers(box){
             '<path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="currentColor"/>'+
           '</svg>'+
         '</div>'+
-        '<div class="min-w-0 flex-1">'+
+        <div class="min-w-0 flex-1">'+
           '<div class="flex items-center gap-2">'+
             '<h3 class="font-medium truncate">'+name+'</h3>'+
             '<span class="px-1.5 py-0.5 text-xs rounded border bg-slate-50 text-slate-700 border-slate-200">'+(u.role||'agent')+'</span>'+
@@ -440,9 +441,9 @@ async function renderUsers(box){
   }).join('');
 }
 
-// ===================================================================
-// FOTO IZGARASI
-// ===================================================================
+/* =========================================================
+   FOTO IZGARASI
+   ========================================================= */
 function renderPhotoList(gridEl){
   if (!gridEl) return;
   if (!photoBuffer.length){
