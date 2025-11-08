@@ -1,9 +1,22 @@
-/* K5 - tw.css (değişmedi) */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-.container-narrow {
-  max-width: 1200px;
-  margin: 0 auto;
+/* ---- K5 UI helpers ---- */
+:root{
+  --brand: #E30613;     
+  --brand-700:#c20510;
+  --ink:#0f172a;
 }
+
+.bg-brand      { background-color: var(--brand); }
+.bg-brand-700  { background-color: var(--brand-700); }
+.text-brand    { color: var(--brand); }
+.border-brand  { border-color: var(--brand); }
+
+.btn-primary{
+  @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-white;
+  background-color: var(--brand);
+}
+.btn-primary:hover{ background-color: var(--brand-700); }
+
+.input{
+  @apply w-full rounded-lg border px-3 py-2 outline-none;
+}
+.container-narrow{ max-width:1200px; margin:0 auto; }
