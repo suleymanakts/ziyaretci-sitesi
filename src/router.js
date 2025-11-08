@@ -1,10 +1,11 @@
 // /src/router.js
-import Home from '@/components/Home.js';
+import Home, { mountHome } from './components/Home.js';
 import Listings, { mountListings } from '@/components/Listings.js';
 import ListingDetail from '@/components/ListingDetail.js';
 import Admin from '@/components/Admin.js';
 import Login from '@/components/Login.js';
 import Register from '@/components/Register.js';
+
 
 // 🔧 Agents modülünü toplu import: named export olsa da olmasa da çalışır
 import * as AgentsMod from '@/components/Agents.js';
