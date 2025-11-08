@@ -1,22 +1,18 @@
 // /src/auth.js
 // K5 — Oturum ve kullanıcı işlemleri (tek-kanal: data.js)
-// - Session: data.js -> getCurrentUser / setCurrentUser (auth:changed event burada yayılır)
-// - User store: publicUsers.v1 (gerekirse et_users'tan migrasyon)
-// - Şifre alanı: pass | password toleranslı
+// - Session: data.js -> getCurrentUser / setCurrentUser (auth:changed event data.js tarafında yayılır)
+// - User store: publicUsers.v1 (varsa et_users'tan migrasyon)
+// - Şifre alanı toleransı: pass | password
 
 import {
   getUsers,
   saveUsers,
-  getCurrentUser as apiGetCurrentUser,
-  setCurrentUser as apiSetCurrentUser,
+  getCurrentUser as getSession,
+  setCurrentUser as setSession,
   newId,
 } from '@/api/data.js';
 
-// -------------------- Sabitler --------------------
-const USERS_KEY = 'publicUsers.v1';
-const ET_USERS  = 'et_users'; // eski havuz (varsa)
-
-// -------------------- Yardımcılar --------------------
+/* -------------------- Yardımcılar -------------------- */
 function normalizeEmail(s) {
   return String(s || '').trim().toLowerCase();
 }
@@ -44,10 +40,10 @@ function uniqueByEmail(arr) {
   });
 }
 
-// -------------------- Seed (ilk kurulum) --------------------
+/* -------------------- Seed (ilk kurulum) -------------------- */
 (function seedUsersOnce() {
-  const existing = getUsers();
-  if (Array.isArray(existing) && existing.length) return;
+  const existing = Array.isArray(getUsers()) ? getUsers() : [];
+  if (existing.length) return;
 
   const seed = [
     { id: 'u1', fullName: 'Admin Kullanıcı',  email: 'admin@local',  pass: '1234', role: 'admin',  published: true,  createdAt: new Date().toISOString() },
@@ -56,10 +52,10 @@ function uniqueByEmail(arr) {
   saveUsers(seed);
 })();
 
-// -------------------- Migrasyon (et_users -> publicUsers.v1) --------------------
+/* -------------------- Migrasyon (et_users -> publicUsers.v1) -------------------- */
 (function migrateEtUsersOnce() {
   const pub = Array.isArray(getUsers()) ? getUsers() : [];
-  const etc = readLocalJSON(ET_USERS, []);
+  const etc = readLocalJSON('et_users', []);
 
   if (Array.isArray(etc) && etc.length) {
     const emails = new Set(pub.map(u => normalizeEmail(u.email)));
@@ -102,20 +98,19 @@ function uniqueByEmail(arr) {
   }
 })();
 
-// -------------------- Oturum API --------------------
+/* -------------------- Oturum API -------------------- */
 export function currentUser() {
-  return apiGetCurrentUser();
+  return getSession();
 }
 export function isAuthenticated() {
-  return !!apiGetCurrentUser();
+  return !!getSession();
 }
 
-// -------------------- Auth İşlemleri --------------------
+/* -------------------- Auth İşlemleri -------------------- */
 export function login(email, password) {
   const e = normalizeEmail(email);
   const p = String(password ?? '');
 
-  // Havuz: yalnızca publicUsers.v1 (migrasyon zaten üstte yapıldı)
   const users = Array.isArray(getUsers()) ? getUsers() : [];
   const user = users.find(u =>
     normalizeEmail(u.email) === e &&
@@ -125,10 +120,10 @@ export function login(email, password) {
   if (!user) {
     throw new Error('Geçersiz e-posta veya şifre.');
   }
-  // İstersen yayın kontrolü:
+  // Yayın kontrolü istersen aç:
   // if (user.published === false) throw new Error('Hesabınız henüz yayınlanmamış.');
 
-  apiSetCurrentUser({
+  setSession({
     id: user.id,
     email: normalizeEmail(user.email),
     fullName: user.fullName,
@@ -138,7 +133,7 @@ export function login(email, password) {
 }
 
 export function logout() {
-  apiSetCurrentUser(null); // data.js tarafı auth:changed yayar
+  setSession(null); // data.js tarafı auth:changed yayar
 }
 
 export function register({ fullName, email, password, role = 'agent', published = false }) {
@@ -163,16 +158,17 @@ export function register({ fullName, email, password, role = 'agent', published 
   saveUsers(users);
 
   // (Opsiyonel) otomatik giriş
-  // apiSetCurrentUser({ id: nu.id, email: nu.email, fullName: nu.fullName, role: nu.role });
+  // setSession({ id: nu.id, email: nu.email, fullName: nu.fullName, role: nu.role });
 
   return { id: nu.id, email: nu.email, fullName: nu.fullName, role: nu.role, published: nu.published };
 }
 
-// -------------------- Debug (opsiyonel) --------------------
+/* -------------------- Debug (opsiyonel) -------------------- */
 window.__debugAuth = function () {
   try {
-    console.log('AUTH currentUser()', apiGetCurrentUser());
-    console.log('USERS (count):', Array.isArray(getUsers()) ? getUsers().length : 0);
+    console.log('AUTH currentUser()', getSession());
+    const list = Array.isArray(getUsers()) ? getUsers() : [];
+    console.log('USERS (count):', list.length, list);
   } catch (e) {
     console.warn('__debugAuth error:', e);
   }
