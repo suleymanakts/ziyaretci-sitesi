@@ -1,16 +1,35 @@
 // /src/main.js
-import './tw.css'; // Tailwind çıktı dosyan (adı sende farklıysa onu yaz)
+import './tw.css';                  // Tailwind çıkış dosyan (adı farklıysa düzelt)
 import { initRouter } from './router.js';
 import Header from './components/Header.js';
 import Footer from './components/Footer.js';
 
-function boot() {
-  // header & footer yerleşimi (senin HTML yapına uyacak şekilde)
-  const headerHost = document.getElementById('header');
-  const footerHost = document.getElementById('footer');
-  if (headerHost) headerHost.innerHTML = Header();
-  if (footerHost) footerHost.innerHTML = Footer?.() || '';
-
-  initRouter();
+function safeRenderFooter() {
+  try {
+    const host = document.getElementById('footer');
+    if (!host) return;
+    // Footer string döndürüyorsa yaz; yoksa boş bırak
+    const html = (typeof Footer === 'function') ? Footer() : '';
+    if (typeof html === 'string') host.innerHTML = html;
+  } catch (e) {
+    console.warn('[main] footer render failed:', e);
+  }
 }
-document.addEventListener('DOMContentLoaded', boot);
+
+function boot() {
+  // HEADER: Header() kendi içinde #header’a yazar (innerHTML atama yok!)
+  try { Header(); } catch (e) { console.warn('[main] header render failed:', e); }
+
+  // FOOTER: string döndürüyorsa yerleştir
+  safeRenderFooter();
+
+  // Router’ı başlat
+  try { initRouter(); } catch (e) { console.error('[main] router init failed:', e); }
+}
+
+// DOM hazır olunca başlat
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
