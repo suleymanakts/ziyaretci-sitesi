@@ -1,22 +1,23 @@
-/* ---- K5 UI helpers ---- */
-:root{
-  --brand: #E30613;     
-  --brand-700:#c20510;
-  --ink:#0f172a;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-.bg-brand      { background-color: var(--brand); }
-.bg-brand-700  { background-color: var(--brand-700); }
-.text-brand    { color: var(--brand); }
-.border-brand  { border-color: var(--brand); }
+:root{ --brand:#e11931; } /* Remax kırmızısı tadında */
+.bg-brand{ background: var(--brand); }
+.text-brand{ color: var(--brand); }
+.container-narrow{ max-width: 1200px; margin:0 auto; }
 
-.btn-primary{
-  @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-white;
-  background-color: var(--brand);
-}
-.btn-primary:hover{ background-color: var(--brand-700); }
+/* üst kırmızı bar */
+.brand-bar{ height: 6px; background: var(--brand); }
 
-.input{
-  @apply w-full rounded-lg border px-3 py-2 outline-none;
+/* arama */
+.search-bar{
+  display:flex; gap:.5rem; padding:.75rem;
+  background:var(--brand); border-radius:.75rem; margin-bottom:1rem;
 }
-.container-narrow{ max-width:1200px; margin:0 auto; }
+.search-bar input{
+  flex:1; padding:.5rem .75rem; border-radius:.5rem; border:1px solid rgba(255,255,255,.35);
+}
+.search-bar button{
+  padding:.5rem .9rem; border-radius:.5rem; background:#111827; color:#fff;
+}
