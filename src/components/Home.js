@@ -19,7 +19,7 @@ export default function Home(){
       </div>
     </div>
 
-    <!-- Son İlanlar -->
+    <!-- Son İlanlar deneme -->
     <div>
       <div class="mb-3 flex items-center justify-between">
         <h2 class="text-xl font-semibold">Son İlanlar</h2>
