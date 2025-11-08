@@ -1,6 +1,6 @@
 // /src/router.js
 import Home, { mountHome } from './components/Home.js';
-import Listings, { mountListings } from '@/components/Listings.js';
+import ListingDetail, { mountListingDetail } from './components/ListingDetail.js';
 import ListingDetail from '@/components/ListingDetail.js';
 import Admin from '@/components/Admin.js';
 import Login from '@/components/Login.js';
@@ -41,7 +41,11 @@ const routeTable = [
       mount: (root) => { try { window.__mountDetail?.(root, p.id); } catch (e) { console.error(e); } }
     })
   },
-
+{ pattern: /^#\/listing\/(?<id>[^\/]+)$/, render: p => {
+    const html = ListingDetail(p.id);
+    viewEl().innerHTML = html;
+    try { mountListingDetail?.(p.id, viewEl()); } catch {}
+}},
   // Danışmanlar
   {
     pattern: /^#\/agents$/,
