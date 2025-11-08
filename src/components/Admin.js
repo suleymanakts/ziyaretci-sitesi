@@ -1,10 +1,9 @@
-// /src/components/Admin.js
+// K5 - Admin.js (ID üretimi eklendi + string sentez hatası düzeltildi)
 import {
   getListings, upsertListing, publishListing,
-  getUsers, saveUsers, publishUser,
+  getUsers, saveUsers, publishUser, newId,
 } from '../api/data.js';
 
-/* -------------------- yardımcılar -------------------- */
 const $ = (sel, root = document) => root.querySelector(sel);
 
 function toast(msg){
@@ -169,7 +168,6 @@ export default function Admin(){
   </div>
 </section>`;
 
-  // bağlama garantisi (DOM hazır değilse bekler)
   const tryMount = () => {
     const wrap = document.getElementById('admin-wrap');
     if (!wrap) return false;
@@ -198,9 +196,9 @@ function bindAdmin(wrap){
     panels.forEach(p=>p.classList.toggle('hidden', p.dataset.tab!==tab));
   };
   navBtns.forEach(b=>b.addEventListener('click',()=>activate(b.dataset.tab)));
-  activate('ilanlar'); // açılışta İlanlar
+  activate('ilanlar');
 
-  /* ---- İlanlar sekmesi ---- */
+  /* ---- İlanlar ---- */
   const ilanPanel = wrap.querySelector('[data-tab="ilanlar"]');
   if (ilanPanel){
     ilanPanel.addEventListener('click', (e)=>{
@@ -255,7 +253,7 @@ function bindAdmin(wrap){
     renderListings($('#listingsBox', ilanPanel));
   }
 
-  /* ---- Kullanıcılar sekmesi ---- */
+  /* ---- Kullanıcılar ---- */
   const usrPanel = wrap.querySelector('[data-tab="kullanicilar"]');
   if (usrPanel){
     usrPanel.addEventListener('click', (e)=>{
@@ -314,6 +312,7 @@ async function onSubmitNewListing(e){
   if (vUrl && !isValidVideoUrl(vUrl)){ alert('Video URL geçersiz.'); return; }
 
   const rec={
+    id: newId('l'), // ← eklenen
     title:(fd.get('title')||'').toString().trim(),
     description:(fd.get('description')||'').toString().trim(),
     price:Number(fd.get('price')||0)||0,
@@ -415,7 +414,7 @@ async function renderUsers(box){
             '<path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="currentColor"/>'+
           '</svg>'+
         '</div>'+
-        <div class="min-w-0 flex-1">'+
+        '<div class="min-w-0 flex-1">'+
           '<div class="flex items-center gap-2">'+
             '<h3 class="font-medium truncate">'+name+'</h3>'+
             '<span class="px-1.5 py-0.5 text-xs rounded border bg-slate-50 text-slate-700 border-slate-200">'+(u.role||'agent')+'</span>'+

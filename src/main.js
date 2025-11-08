@@ -1,14 +1,24 @@
-// /src/main.js
-import './tw.css';                  // Tailwind çıkış dosyan (adı farklıysa düzelt)
+// K5 - main.js
+import './tw.css';
 import { initRouter } from './router.js';
 import Header from './components/Header.js';
 import Footer from './components/Footer.js';
+
+function safeRenderHeader() {
+  try {
+    const host = document.getElementById('header');
+    if (!host) return;
+    // Header kendi içinde host'a yazar (innerHTML set eder)
+    Header();
+  } catch (e) {
+    console.warn('[main] header render failed:', e);
+  }
+}
 
 function safeRenderFooter() {
   try {
     const host = document.getElementById('footer');
     if (!host) return;
-    // Footer string döndürüyorsa yaz; yoksa boş bırak
     const html = (typeof Footer === 'function') ? Footer() : '';
     if (typeof html === 'string') host.innerHTML = html;
   } catch (e) {
@@ -17,14 +27,14 @@ function safeRenderFooter() {
 }
 
 function boot() {
-  // HEADER: Header() kendi içinde #header’a yazar (innerHTML atama yok!)
-  try { Header(); } catch (e) { console.warn('[main] header render failed:', e); }
-
-  // FOOTER: string döndürüyorsa yerleştir
+  safeRenderHeader();
   safeRenderFooter();
 
-  // Router’ı başlat
-  try { initRouter(); } catch (e) { console.error('[main] router init failed:', e); }
+  try {
+    initRouter();
+  } catch (e) {
+    console.error('[main] router init failed:', e);
+  }
 }
 
 // DOM hazır olunca başlat
@@ -33,3 +43,7 @@ if (document.readyState === 'loading') {
 } else {
   boot();
 }
+
+// Header/Footer, auth veya route değişince otomatik tazelensin
+window.addEventListener('auth:changed', () => { safeRenderHeader(); safeRenderFooter(); });
+window.addEventListener('hashchange',     () => { safeRenderHeader(); safeRenderFooter(); });

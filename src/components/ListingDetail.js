@@ -1,13 +1,9 @@
-// /src/components/ListingDetail.js
-// Detay sayfası: galeri + paylaş + OG/Twitter meta injection (dev'de)
-
+// K5 - ListingDetail.js (değişmedi – senin paylaştığın stabil sürüm)
 import { getListingById } from '../api/data.js';
 
-// basit escape
 const esc = (s='') => String(s).replace(/[&<>"']/g, m =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 
-// paylaş linkleri
 function buildShareLinks(listing) {
   const url  = location.href;
   const text = `${listing.title || 'Emlak ilanı'} - ${listing?.location?.province || ''} ${listing?.location?.district || ''}`;
@@ -22,13 +18,10 @@ function buildShareLinks(listing) {
   ];
 }
 
-// dev modda head’e og/twitter meta bas
 function injectMeta(listing) {
   try {
-    // üretimde genelde SSR/edge tarafında yazılır; burada dev için DOM’a ekliyoruz
     const head = document.head;
     const removeOld = (sel) => head.querySelectorAll(sel).forEach(n=>n.remove());
-
     removeOld('meta[property^="og:"], meta[name^="twitter:"]');
 
     const cover = (listing.photos && listing.photos[listing.coverIndex || 0]) || '';
@@ -40,7 +33,6 @@ function injectMeta(listing) {
       ['property','og:description', desc],
       ['property','og:url', location.href],
       ['property','og:image', cover],
-
       ['name','twitter:card', cover ? 'summary_large_image' : 'summary'],
       ['name','twitter:title', title],
       ['name','twitter:description', desc],
@@ -56,17 +48,14 @@ function injectMeta(listing) {
   } catch {}
 }
 
-// küçük fiyat formatı
 function fmtPrice(n) {
   if (n == null || isNaN(n)) return '';
   return new Intl.NumberFormat('tr-TR').format(Number(n)) + ' ₺';
 }
 
-// basit galeri
 function Gallery(listing) {
   const photos = Array.isArray(listing.photos) ? listing.photos : [];
   if (!photos.length) return `<div class="aspect-[16/9] bg-slate-100 grid place-items-center text-slate-400">Görsel yok</div>`;
-
   const coverIdx = Math.max(0, Math.min(Number(listing.coverIndex)||0, photos.length-1));
   const cover = photos[coverIdx];
 
@@ -87,8 +76,7 @@ function Gallery(listing) {
 }
 
 export default function ListingDetail(id) {
-  // HTML’i hemen döndür, mount’ta veriyi çekip dolduracağız
-  queueMicrotask(()=>mountListingDetail(id)); // router çağırmasa bile garanti
+  queueMicrotask(()=>mountListingDetail(id));
   return `
     <section class="container-narrow mx-auto py-6" data-detail-root>
       <div id="detailBody" class="grid md:grid-cols-3 gap-6">
@@ -127,7 +115,6 @@ export async function mountListingDetail(id, root) {
     return;
   }
 
-  // meta (dev)
   injectMeta(rec);
 
   const loc = [rec?.location?.province, rec?.location?.district, rec?.location?.neighborhood].filter(Boolean).join(' / ');
@@ -175,7 +162,6 @@ export async function mountListingDetail(id, root) {
     </div>
   `;
 
-  // küçük galeri davranışı (thumb → kapak)
   const gal = host.querySelector('[data-gallery]');
   if (gal) {
     gal.addEventListener('click', (e)=>{
@@ -191,7 +177,6 @@ export async function mountListingDetail(id, root) {
   }
 }
 
-// iskelet
 function Skeleton() {
   return `
     <div class="space-y-2">
