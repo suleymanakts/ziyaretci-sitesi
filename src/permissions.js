@@ -1,4 +1,4 @@
-// K5 - permissions.js (değişmedi)
+// /src/permissions.js
 const roleMatrix = {
   admin:     ['listings:all','users:all','reports:all'],
   broker:    ['listings:all','users:read','reports:office'],

@@ -1,23 +1,9 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-:root{ --brand:#e11931; } /* Remax kırmızısı tadında */
+/* /src/style.css — Tailwind kullanıyorsan bu dosya Tailwind çıktısı olabilir. */
+:root{
+  --brand:#0ea5e9; /* sky-500 */
+}
 .bg-brand{ background: var(--brand); }
 .text-brand{ color: var(--brand); }
-.container-narrow{ max-width: 1200px; margin:0 auto; }
-
-/* üst kırmızı bar */
-.brand-bar{ height: 6px; background: var(--brand); }
-
-/* arama */
-.search-bar{
-  display:flex; gap:.5rem; padding:.75rem;
-  background:var(--brand); border-radius:.75rem; margin-bottom:1rem;
-}
-.search-bar input{
-  flex:1; padding:.5rem .75rem; border-radius:.5rem; border:1px solid rgba(255,255,255,.35);
-}
-.search-bar button{
-  padding:.5rem .9rem; border-radius:.5rem; background:#111827; color:#fff;
-}
+.container-narrow{ max-width: 1024px; }
+body{ font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, 'Helvetica Neue', Arial; background:#f7fafc; }
+a{ color: inherit; text-decoration: none; }

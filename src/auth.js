@@ -1,8 +1,9 @@
-// K5 - auth.js (değişmedi)
+// /src/auth.js
 const USERS_KEY = 'publicUsers.v1';
 const AUTH_KEY  = 'publicAuth.v1';
 import { getUsers, saveUsers, getCurrentUser, setCurrentUser, newId } from '@/api/data.js';
 
+// seed (ilk kurulum)
 (function seedUsersOnce(){
   try {
     if (!localStorage.getItem(USERS_KEY)) {
@@ -43,6 +44,7 @@ export function register({ fullName, email, password, role='agent', published=fa
   return { id: nu.id, email: nu.email, fullName: nu.fullName, role: nu.role, published: nu.published };
 }
 
+// debug
 window.__debugAuth = function(){
   console.log('AUTH', localStorage.getItem(AUTH_KEY));
   console.log('USERS', localStorage.getItem(USERS_KEY));

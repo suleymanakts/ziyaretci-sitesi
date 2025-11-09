@@ -1,5 +1,15 @@
-// K5 - geo.js (değişmedi)
+// /src/utils/geo.js
+let cache = null;
+
 export async function loadTRLocations() {
-  const res = await fetch('/data/locations-tr.json');
-  return await res.json();
+  if (cache) return cache;
+  cache = {
+    'İstanbul': { 'Kadıköy': ['Acıbadem','Koşuyolu','Moda'], 'Ataşehir': ['Atatürk','İçerenköy'] },
+    'İzmir':    { 'Konak':   ['Alsancak','Güzelyalı'],       'Karşıyaka': ['Bostanlı','Mavişehir'] },
+  };
+  return cache;
 }
+
+export function provinces() { return Object.keys(cache||{}); }
+export function districts(p) { return Object.keys((cache||{})[p]||{}); }
+export function neighborhoods(p,d) { return ((cache||{})[p]||{})[d]||[]; }

@@ -1,7 +1,15 @@
-// vite.config.js (ESM) — Node 18+ için uygundur
+// /vite.config.js
 import { defineConfig } from 'vite';
 import path from 'path';
+
 export default defineConfig({
-  base: '/',
-  resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src')
+    }
+  },
+  server: {
+    port: 5173,
+    open: false
+  }
 });

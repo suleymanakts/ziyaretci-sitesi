@@ -1,10 +1,10 @@
-// K5-Rescue Card
+// /src/components/Card.js
+import { formatPrice } from '@/utils/format.js';
+
 export default function Card(x) {
-  const price = (x.price!=null && !isNaN(x.price))
-    ? new Intl.NumberFormat('tr-TR').format(Number(x.price)) + ' ₺' : '';
+  const price = x.price != null ? formatPrice(x.price) : '';
   const cover = (x.photos && x.photos[x.coverIndex || 0]) || '';
   const loc = [x?.location?.province, x?.location?.district].filter(Boolean).join(' / ');
-  const esc = (s='') => String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
   return `
     <a href="#/listing/${esc(x.id)}" class="block border rounded-xl overflow-hidden bg-white hover:shadow">
       ${cover ? `<img class="w-full h-40 object-cover" src="${esc(cover)}" alt="">` : ''}
@@ -16,3 +16,4 @@ export default function Card(x) {
     </a>
   `;
 }
+function esc(s=''){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
